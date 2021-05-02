@@ -1,6 +1,6 @@
 import { TaskAdapter, TodoistComment, TodoistProject, TodoistSection, TodoistTask } from 'todoist-rest-api';
 import { fetchData, TodoistData } from './data'
-import { getData } from './io';
+import { getData, writeMarkdown } from './io';
 
 const USE_CACHE = true;
 
@@ -14,6 +14,9 @@ async function main() {
 
         let data = transformData(rawData)
 
+        let text = printData(data)
+
+        writeMarkdown(text)
 
     } catch (error) {
         console.log(error)
@@ -37,21 +40,21 @@ function transformData(data: TodoistData): TodoProjects {
 
         let enrichedTasks: TodoTask[] = curTasks.map(task => {
             let curChildren = curSubTasks.filter(t => t.parent == task.id)
-            let curComms = data.comms.filter(c => c.task_id = task.id)
+            let curComms = data.comms.filter(c => c.task_id == task.id)
 
             let curTask: TodoTask = {
                 ...task,
-                subtasks: curChildren,
-                comments: curComms
+                subtasks: curChildren ?? [],
+                comments: curComms ?? []
             }
             return curTask
         })
 
         let enrichedSects: TodoSection[] = curSects.map(sect => {
-            let sectTasks = enrichedTasks.filter(t => t.section_id = sect.id)
+            let sectTasks = enrichedTasks.filter(t => t.section_id == sect.id)
             let curSect: TodoSection = {
                 ...sect,
-                tasks: sectTasks.sort(sortByOrder)
+                tasks: sectTasks.sort(sortByOrder) ?? []
             }
             return curSect
         })
@@ -60,8 +63,8 @@ function transformData(data: TodoistData): TodoProjects {
 
         let curProj: TodoProject = {
             ...proj,
-            tasks: baseTasks.sort(sortByOrder),
-            sects: enrichedSects
+            tasks: baseTasks.sort(sortByOrder) ?? [],
+            sects: enrichedSects ?? []
         }
 
         return curProj
@@ -70,6 +73,42 @@ function transformData(data: TodoistData): TodoProjects {
     // filter out inbox
 
     return projects
+}
+
+
+
+function printData(data: TodoProjects): string {
+    let title = "# My Todo List\r\n\r\n"
+
+    let projs = data.filter(p => p.name != "Inbox").map(proj => {
+
+        let subTitle = `\r\n## ${proj.name}\r\n\r\n`
+
+        let tasks = proj.tasks?.map(printTask)
+
+        let sections = proj.sects?.map(sect => {
+            let sectTitle = `\r\n\r\n### ${sect.name}\r\n\r\n`
+            let sectTasks = sect.tasks?.map(printTask)
+            return sectTitle + sectTasks?.join("\r\n")
+        })
+
+        return subTitle + tasks?.join("\r\n") + sections
+    })
+
+
+    return title + projs.join("\r\n") + "\r\n"
+}
+
+function printTask(task: TodoTask): string {
+    let line =  `* [ ] ${task.content}`
+    let subs = task.subtasks?.map(sub => `  * [ ] ${sub.content}`).join("\r\n")
+    let coms = task.comments?.map(com => `      ${com.content}`).join("\r\n")
+    return `${line}${prefixIfExists(subs)}${prefixIfExists(coms)}`
+
+}
+
+function prefixIfExists(input:string | undefined): string {
+    return input ? `\r\n${input}` : ""
 }
 
 
@@ -90,5 +129,3 @@ export interface TodoTask extends RemoveIndex<TodoistTask> {
     subtasks?: TodoTask[];
     comments?: TodoistComment[];
 }
-
-

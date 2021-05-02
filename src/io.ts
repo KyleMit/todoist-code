@@ -2,6 +2,7 @@ import { promises as fs } from "fs"
 import { fetchData, TodoistData } from "./data"
 
 const FILENAME = "./data/cache.json"
+const MARKDOWN_FILE = "./data/todo.md"
 
 export async function readData(): Promise<TodoistData | null> {
     const text = await tryReadText()
@@ -33,4 +34,9 @@ export async function getData(useCache: boolean): Promise<TodoistData> {
     let data = await fetchData()
     await writeData(data)
     return data
+}
+
+export async function writeMarkdown(text: string): Promise<void> {
+    await fs.mkdir("./data", {recursive: true})
+    await fs.writeFile(MARKDOWN_FILE, text, "utf8")
 }
