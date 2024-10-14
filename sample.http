@@ -1,0 +1,21 @@
+@baseUrl = https://api.todoist.com/rest/v2
+
+
+### get projects
+GET {{baseUrl}}/projects
+Authorization: Bearer {{$dotenv API_TOKEN}}
+
+
+### get sections
+@projectId = 2261883393
+GET {{baseUrl}}/sections?project_id={{projectId}}
+Authorization: Bearer {{$dotenv API_TOKEN}}
+
+### get tasks
+GET {{baseUrl}}/tasks
+Authorization: Bearer {{$dotenv API_TOKEN}}
+
+### get comments
+@taskId = 4700366412
+GET {{baseUrl}}/comments?task_id={{taskId}}
+Authorization: Bearer {{$dotenv API_TOKEN}}
