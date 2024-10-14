@@ -1,14 +1,22 @@
-import {
-    Comment as TodoistComment,
-    Project as TodoistProject,
-    Section as TodoistSection,
-    Task as TodoistTask
-} from 'npm:@doist/todoist-api-typescript';
+import { Comment, Project, Section, Task } from 'npm:@doist/todoist-api-typescript';
 
-export interface TodoistData {
-    projects: TodoistProject[];
-    sections: TodoistSection[];
-    tasks: TodoistTask[];
-    comments: TodoistComment[];
+export type TodoistData = {
+    projects: Project[];
+    sections: Section[];
+    tasks: Task[];
+    comments: Comment[];
+};
+
+export type TodoTask = Task & {
+    subtasks: Task[];
+    comments: Comment[];
 }
-export type { TodoistComment, TodoistProject, TodoistSection, TodoistTask };
+
+export type TodoSection = Section & {
+    tasks: TodoTask[];
+}
+
+export type TodoProject = Project & {
+    tasks: TodoTask[];
+    sects: TodoSection[];
+}

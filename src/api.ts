@@ -1,7 +1,7 @@
 // Automatically load environment variables from a `.env` file
 import "@std/dotenv/load";
-import { TodoistApi } from 'npm:@doist/todoist-api-typescript'
-import { type TodoistData, type TodoistTask } from './types.ts'
+import { Task, TodoistApi } from 'npm:@doist/todoist-api-typescript'
+import { type TodoistData } from './types.ts'
 
 export async function getTodoistData(useCache: boolean): Promise<TodoistData> {
     // try cache first
@@ -37,7 +37,7 @@ async function fetchTodoistData(): Promise<TodoistData> {
     return todoistData;
 }
 
-async function getAllComments(api: TodoistApi, tasks: TodoistTask[]) {
+async function getAllComments(api: TodoistApi, tasks: Task[]) {
     // get comments for each task that has comments
     const tasksWithComments = tasks.filter(t => t.commentCount > 0)
     const commentsMapPromises = tasksWithComments.map(t => {
