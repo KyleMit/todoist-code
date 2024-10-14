@@ -3,22 +3,21 @@ import { getTodoistData } from './api.ts'
 import type { TodoistData, TodoProject, TodoSection, TodoTask } from './types.ts'
 
 const USE_CACHE = true;
+const MD_FILENAME = "./data/todo.md"
 
 const rawData = await getTodoistData(USE_CACHE)
-const data = transformData(rawData)
+const data = transformTodos(rawData)
+const output = formatTodos(data)
 
-console.log(data)
-
-
-
+await Deno.writeTextFile(MD_FILENAME, output)
 
 
-function transformData({projects, sections, tasks, comments}: TodoistData) {
+function transformTodos({projects, sections, tasks, comments}: TodoistData): TodoProject[] {
     const topTasks = tasks.filter(t => !t.parentId)
     const subTasks = tasks.filter(t => t.parentId)
 
     // attach comments and subtasks to tasks
-    const enrichedProjects: Project[] = projects.map(proj => {
+    const enrichedProjects: TodoProject[] = projects.map(proj => {
 
         const getCurProj = (t: {projectId: string}) => t.projectId == proj.id
         const sortByOrder = (a: Task, b: Task) => a.order - b.order
@@ -65,3 +64,37 @@ function transformData({projects, sections, tasks, comments}: TodoistData) {
 }
 
 
+
+function formatTodos(data: TodoProject[]): string {
+    const title = "# My Todo List\r\n\r\n"
+
+    const projs = data.filter(p => !p.isInboxProject).map(proj => {
+
+        const subTitle = `\r\n## ${proj.name}\r\n\r\n`
+
+        const tasks = proj.tasks?.map(printTask)
+
+        const sections = proj.sects?.map(sect => {
+            const sectTitle = `\r\n\r\n### ${sect.name}\r\n\r\n`
+            const sectTasks = sect.tasks?.map(printTask)
+            return sectTitle + sectTasks?.join("\r\n")
+        })
+
+        return subTitle + tasks?.join("\r\n") + sections
+    })
+
+
+    return title + projs.join("\r\n") + "\r\n"
+}
+
+function printTask(task: TodoTask): string {
+    const line =  `* [ ] ${task.content}`
+    const subs = task.subtasks?.map(sub => `  * [ ] ${sub.content}`).join("\r\n")
+    const coms = task.comments?.map(com => `      ${com.content}`).join("\r\n")
+    return `${line}${prefixIfExists(subs)}${prefixIfExists(coms)}`
+
+}
+
+function prefixIfExists(input:string | undefined): string {
+    return input ? `\r\n${input}` : ""
+}

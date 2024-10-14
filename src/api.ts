@@ -3,17 +3,19 @@ import "@std/dotenv/load";
 import { Task, TodoistApi } from 'npm:@doist/todoist-api-typescript'
 import { type TodoistData } from './types.ts'
 
+const CACHE_FILENAME = "./data/cache.json"
+
 export async function getTodoistData(useCache: boolean): Promise<TodoistData> {
     // try cache first
     if (useCache) {
-        const cachedFile = await Deno.readTextFile("./data/cache.json")
+        const cachedFile = await Deno.readTextFile(CACHE_FILENAME)
         const cachedData = JSON.parse(cachedFile) as TodoistData
         if (cachedData) return cachedData;
     }
 
     // if we fetch data, write it to cache and return
     const data = await fetchTodoistData()
-    await Deno.writeTextFile("./data/cache.json", JSON.stringify(data, null, 2))
+    await Deno.writeTextFile(CACHE_FILENAME, JSON.stringify(data, null, 2))
     return data
 }
 
