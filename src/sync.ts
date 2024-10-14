@@ -2,7 +2,7 @@ import { TaskAdapter, TodoistComment, TodoistProject, TodoistSection, TodoistTas
 import { fetchData, TodoistData } from './data'
 import { getData, writeMarkdown } from './io';
 
-const USE_CACHE = true;
+const USE_CACHE = false;
 
 main()
 
